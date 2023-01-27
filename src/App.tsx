@@ -28,7 +28,6 @@ function keyLogic(input: number){
 
 function DraggableButton({ index, setCurrKey, setParentCurrButtonCoordinates, setCurrButtonInnerHTML }: IDraggableButton) {
   const [currButtonOffset, setCurrButtonOffset] = useState({ x: 0, y: 0 })
-  const [currButtonCoordinates, setCurrButtonCoordinates] = useState({ xStart: 0, xEnd: 0, yStart: 0, yEnd: 0 })
 
   function handleMouseDown(e: React.MouseEvent<HTMLButtonElement>){
     setCurrKey(index)    
@@ -38,17 +37,9 @@ function DraggableButton({ index, setCurrKey, setParentCurrButtonCoordinates, se
     const currButtonGet = document.getElementById(`currButton-${index}`)
     if (!currButtonGet) return
     const { top: t, left: l } = currButtonGet.getBoundingClientRect()
-    setCurrButtonCoordinates({ xStart: l, xEnd: l + buttonWidth, yStart: t, yEnd: t + buttonHeight })
     setParentCurrButtonCoordinates({ xStart: l, xEnd: l + buttonWidth, yStart: t, yEnd: t + buttonHeight })
     setCurrButtonInnerHTML(e.currentTarget.innerText)
   }
-
-  useEffect(() => {
-    const currButtonGet = document.getElementById(`currButton-${index}`)
-    if (!currButtonGet) return
-    const { top: t, left: l } = currButtonGet.getBoundingClientRect()
-    setCurrButtonCoordinates({ xStart: l, xEnd: l + buttonWidth, yStart: t, yEnd: t + buttonHeight })
-  }, [])
 
   const bind = useDrag(({ offset: [x0, x1] }) => {
     setCurrButtonOffset({
@@ -88,15 +79,13 @@ export default function App() {
     yStart: number
     yEnd: number
   } | null>(null)
-  // const [currButtonInAnswer, setCurrButtonInAnswer] = useState<boolean>(false)
+  const [currButtonInAnswer, setCurrButtonInAnswer] = useState<boolean>(false)
   const [currButtonInnerHTML, setCurrButtonInnerHTML] = useState<string>("")
   const [mainAnswerDivCoordinates, setMainAnswerDivCoordinates] = useState({ xStart: 0, xEnd: 0, yStart: 0, yEnd: 0 })
   const [correctOrder, setCorrectOrder] = useState<boolean>(false)
-  const [visited, setVisited] = useState<boolean[]>([false, false, false, false, false])
   // const [newXVals, setNewXVals] = useState<{xStart: number, xEnd: number}>({xStart: 0, xEnd: 0})
   const [correctCount, setCorrectCount] = useState<number>(0)
   //delete when done
-  const [notVisited, setNotVisited] = useState<string>("")
   useEffect(() => {
     const currMainDivGet = document.getElementById('mainAnswerDiv')
     if (!currMainDivGet) return
@@ -105,26 +94,26 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (!parentCurrButtonCoordinates) return
+    if (!parentCurrButtonCoordinates) return;
     const { xStart: buttonX, yStart: buttonY } = parentCurrButtonCoordinates
     const { xStart: ansXStart, xEnd: ansXEnd, yStart: ansYStart, yEnd: ansYEnd } = mainAnswerDivCoordinates
     if (buttonX > ansXStart && buttonX < ansXEnd && buttonY > ansYStart && buttonY < ansYEnd) {
-      const newXStart = (ansXStart + ((currKey + 1) * gapValue) + (currKey * buttonWidth)) - 10 
+      const newXStart = (ansXStart + ((correctCount + 1) * gapValue) + (correctCount * buttonWidth)) - 10 
       const newXEnd = newXStart + buttonWidth + 10
       // setNewXVals({xStart: newXStart, xEnd: newXEnd})
       if(buttonX > newXStart && buttonX < newXEnd ){
-        // setCurrButtonInAnswer(true) //you can delete this later
-        if(visited[currKey] === true) {setNotVisited("visited"); return;}
-        setNotVisited("not visited")
+        setCurrButtonInAnswer(true) //you can delete this later
         if(parseInt(currButtonInnerHTML) === answerSet[correctCount]) setCorrectCount(prev => prev + 1)
-        setVisited((prev) => (prev.map((item, key) => {return key === currKey ? true : item})))
       }
     } else {
-      // setCurrButtonInAnswer(false)
+      setCurrButtonInAnswer(false)
     }
+  }, [setParentCurrButtonCoordinates, parentCurrButtonCoordinates, currButtonInnerHTML, setCorrectOrder])
+  
+  useEffect(() => {
     if(correctCount === answerSet.length) setCorrectOrder(true)
-  }, [setParentCurrButtonCoordinates, parentCurrButtonCoordinates])
-
+  })
+  
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: `${gapValue}px` }}>
       <div
@@ -174,10 +163,12 @@ export default function App() {
           })}
         </div>
       </div>
-      <p>currKey: {currKey}</p>
-      <p>{notVisited}</p>
+      <p>Correct count: {correctCount}</p>
+      <p>Finally here: {correctOrder === true && 'Yay'}</p>
+      {/* <p>{parentCurrButtonCoordinates?.xStart} {parentCurrButtonCoordinates?.xEnd}</p>
+      <p>Curr button in answer: {currButtonInAnswer === true && 'Yes'}</p>
       <p>currInnerHTML: {parseInt(currButtonInnerHTML)}</p>
-      <p>currAnswer: {answerSet[correctCount]}</p>
+      <p>currAnswer: {answerSet[correctCount]}</p> */}
       <p>{correctOrder===true && "correct order"}</p>
       {/* <div
         style={{
